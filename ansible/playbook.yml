@@ -1,0 +1,67 @@
+  - hosts: production
+    become: yes
+    vars_files:
+      - Vars.yml
+
+    tasks:
+    - name: update ubuntu
+      shell: apt-get update
+
+    - name: Git Clone
+      git: repo="{{ my_git }}" dest="{{ home_dir }}" update=yes force=yes accept_hostkey=yes
+      register: git_finished
+
+    - name: Update nodejs package
+      shell: curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+
+    - name: Install nodejs
+      apt:
+        name: nodejs
+        state: present
+
+    - name: Install pm2
+      shell: npm install pm2 -g
+
+
+    - name: Install packages based on package.json using the npm
+      npm:
+        path: '{{ home_dir }}'
+        state: present
+
+    - name: Npm initialization
+      shell: npm init -y
+      args:
+        chdir: '{{ home_dir }}'
+
+
+    - name: create env config
+      copy:
+        dest: '{{ home_dir }}.env'
+        content: |
+
+          PORT={{ app_port }}
+          HOST=0.0.0.0
+
+          HOST_URL=http://{{ host_ip_public }}:{{ app_port }}
+          COOKIE_ENCRYPT_PWD=superAwesomePasswordStringThatIsAtLeast32CharactersLong!
+          NODE_ENV=development
+
+          PGHOST={{ bd_host }}
+          PGUSERNAME={{ bd_username }}
+          PGDATABASE={{ bd_name }}
+          PGPASSWORD={{ bd_pass }}
+          PGPORT=5432
+
+          # Okta configuration
+          OKTA_ORG_URL={{ okta_rul }}
+          OKTA_CLIENT_ID={{ okta_id }}
+          OKTA_CLIENT_SECRET={{ okta_secret }}
+
+
+
+    - name: Start APP
+      shell: pm2 start npm -- run dev pm2 save && pm2 startup
+      args:
+        chdir: '{{ home_dir }}'
+
+

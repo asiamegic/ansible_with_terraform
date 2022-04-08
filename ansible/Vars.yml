@@ -1,0 +1,12 @@
+web_hosts: production
+my_git: https://github.com/asiamegic/weight-tracker.git
+home_dir: /home/artemrafikov/app/
+app_port: 8080
+host_ip_public: 
+bd_name: postgres
+bd_username: postgres
+bd_pass: 
+bd_host: 
+okta_rul: 
+okta_id: 
+okta_secret: 
